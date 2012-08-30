@@ -84,6 +84,10 @@ class IMDB {
     private $_strUrl    = NULL;
     // IMDb source.
     private $_strSource = NULL;
+    // IMDb review.
+    private $_strReviews = NULL;
+    // IMDb releaseinfo.
+    private $_strReleaseinfo = NULL;
     // IMDb cache.
     private $_strCache  = 0;
     // IMDb posters directory.
@@ -134,7 +138,11 @@ class IMDB {
         }
         // Set global cache and fetch the data.
         $this->_intCache = (int)$intCache;
-        IMDB::fetchUrl($strSearch);
+        IMDB::fetchUrl($strSearch, &$this->_strSource, false);
+        
+        IMDB::fetchUrl($this->_strUrl . "reviews", &$this->_strReviews, true);
+        IMDB::fetchUrl($this->_strUrl . "releaseinfo", &$this->_strReleaseinfo, true);
+             
     }
 
     /**
@@ -176,9 +184,10 @@ class IMDB {
      *
      * @param string  $strSearch The movie name / IMDb url
      * @param string  $strSave   The path to the file
+     * @param string  $isSubUrl  check weather subUrl or not
      * @return boolean
      */
-    private function fetchUrl($strSearch) {
+    private function fetchUrl($strSearch, &$saveVar, $isSubUrl) {
         // Remove whitespaces.
         $strSearch = trim($strSearch);
 
@@ -190,16 +199,21 @@ class IMDB {
             echo '<pre>Running PHP-IMDB-Grabber v' . IMDB::IMDB_VERSION . '.</pre>';
         }
 
+        $url = NULL;
+        
         // Check for a valid IMDb URL and use it, if available.
         if ($strId = IMDB::matchRegex($strSearch, IMDB::IMDB_URL, 4)) {
             $this->_strId  = preg_replace('~[\D]~', '', $strId);
-            $this->_strUrl = 'http://www.imdb.com/title/tt' . $this->_strId . '/';
+            $url = $this->_strUrl = 'http://www.imdb.com/title/tt' . $this->_strId . '/';
+            if ($isSubUrl)
+            	$url = $strSearch;
+            	
             $bolFind       = false;
             $this->isReady = true;
         }
         // Otherwise try to find one.
         else {
-            $this->_strUrl = 'http://www.imdb.com/find?s=all&q=' . str_replace(' ', '+', $strSearch);
+            $url = $this->_strUrl = 'http://www.imdb.com/find?s=all&q=' . str_replace(' ', '+', $strSearch);
             $bolFind       = true;
             // Check for cached redirects of this search.
             if ($fRedirect = @file_get_contents($this->_strRoot . '/cache/' . md5($this->_strUrl) . '.redir')) {
@@ -212,7 +226,7 @@ class IMDB {
         }
 
         // Check if there is a cache we can use.
-        $fCache = $this->_strRoot . '/cache/' . md5($this->_strUrl) . '.cache';
+        $fCache = $this->_strRoot . '/cache/' . md5($url) . '.cache';
         if (file_exists($fCache)) {
             $bolUseCache = true;
             $intChanged  = filemtime($fCache);
@@ -238,8 +252,8 @@ class IMDB {
                 if (IMDB::IMDB_DEBUG) echo '<b>- Path to cookie:</b> ' . $this->_fCookie . '<br>';
             }
             // Initialize and run the request.
-            if (IMDB::IMDB_DEBUG) echo '<b>- Run cURL on:</b> ' . $this->_strUrl . '<br>';
-            $oCurl = curl_init($this->_strUrl);
+            if (IMDB::IMDB_DEBUG) echo '<b>- Run cURL on:</b> ' . $url . '<br>';
+            $oCurl = curl_init($url);
             curl_setopt_array($oCurl, array (
                                             CURLOPT_VERBOSE => FALSE,
                                             CURLOPT_HEADER => TRUE,
@@ -253,13 +267,14 @@ class IMDB {
                                             CURLOPT_COOKIEFILE => $this->_fCookie
                                             ));
             $strOutput = curl_exec($oCurl);
-            $this->_strSource = $strOutput;
-
+            
+           	$saveVar = $strOutput;
+                       
             // Remove cookie.
             if ($this->_fCookie) {
-                unlink($this->_fCookie);
+            	unlink($this->_fCookie);
             }
-
+            
             // Check if the request actually worked.
             if ($strOutput === FALSE) {
                 if (IMDB::IMDB_DEBUG) echo '<b>! cURL error:</b> ' . $_strUrl . '<br>';
@@ -274,7 +289,7 @@ class IMDB {
             curl_close($oCurl);
 
             // Check if there is a redirect given (IMDb sometimes does not return 301 for this...).
-            $fRedirect = $this->_strRoot . '/cache/' . md5($this->_strUrl) . '.redir';
+            $fRedirect = $this->_strRoot . '/cache/' . md5($url) . '.redir';
             if ($strMatch = $this->matchRegex($strOutput, IMDB::IMDB_REDIRECT, 1)) {
                 $arrExplode = explode('?fr=', $strMatch);
                 $strMatch   = ($arrExplode[0] ? $arrExplode[0] : $strMatch);
@@ -283,7 +298,7 @@ class IMDB {
                 if (IMDB::IMDB_DEBUG) echo '<b>- Saved a new redirect:</b> ' . $fRedirect . '<br>';
                 file_put_contents($fRedirect, $strMatch);
                 // Run the cURL request again with the new url.
-                IMDB::fetchUrl($strMatch);
+                IMDB::fetchUrl($strMatch, &$saveVar, $isSubUrl);
             }
             // Check if any of the search regexes is matching.
             elseif (($strMatch = $this->matchRegex($strOutput, IMDB::IMDB_SEARCH1, 1)) || ($strMatch = $this->matchRegex($strOutput, IMDB::IMDB_SEARCH2, 1))) {
@@ -293,7 +308,7 @@ class IMDB {
                 if (IMDB::IMDB_DEBUG) echo '<b>- Saved a new redirect:</b> ' . $fRedirect . '<br>';
                 file_put_contents($fRedirect, $strMatch);
                 // Run the cURL request again with the new url.
-                IMDB::fetchUrl($strMatch);
+                IMDB::fetchUrl($strMatch, &$saveVar, $isSubUrl);
             }
             // If it's not a redirect and the HTTP response is not 200 or 302, abort.
             elseif ($arrInfo['http_code'] != 200 && $arrInfo['http_code'] != 302) {
@@ -302,12 +317,13 @@ class IMDB {
             }
 
             // Set the global source.
-            $this->_strSource = preg_replace('~(\r|\n|\r\n)~', '', $this->_strSource);
-
+            $this->$saveVar = preg_replace('~(\r|\n|\r\n)~', '', $saveVar);
+                                
+                        
             // Save cache.
             if (!$bolFind) {
                 if (IMDB::IMDB_DEBUG) echo '<b>- Saved a new cache:</b> ' . $fCache . '<br>';
-                file_put_contents($fCache, $this->_strSource);
+                file_put_contents($fCache, $this->$saveVar);
             }
 
             return true;
@@ -1110,3 +1126,4 @@ class IMDB {
         return $oData;
     }
 }
+
