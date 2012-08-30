@@ -27,7 +27,7 @@
 <?php
 include_once 'imdb.class.php';
 
-$oIMDB = new IMDB('New York, I Love You');
+$oIMDB = new IMDB('1408');
 if ($oIMDB->isReady) {
         echo '<p>Also Known As: <b>' . $oIMDB->getAka() . '</b></p>';
         echo '<p>Budget: <b>' . $oIMDB->getBudget() . '</b></p>';
@@ -81,18 +81,7 @@ else {
 <hr>
 
 <?php
-$oIMDB = new IMDB('http://us.imdb.com/Title?0144117');
-if ($oIMDB->isReady) {
-    echo '<p><a href="' . $oIMDB->getUrl() . '">' . $oIMDB->getTitle() . '</a> got rated ' . $oIMDB->getRating() . '.</p>';
-}
-else {
-    echo '<p>Movie not found!</p>';
-}
-?>
-
-<hr>
-
-<?php
+/**
 $oIMDB = new IMDB('http://www.imdb.com/title/tt1022603/');
 if ($oIMDB->isReady) {
     echo '<p><a href="' . $oIMDB->getUrl() . '">' . $oIMDB->getTitle() . '</a> got rated ' . $oIMDB->getRating() . '.</p>';
@@ -101,18 +90,8 @@ if ($oIMDB->isReady) {
 else {
     echo '<p>Movie not found!</p>';
 }
+*/
 ?>
 
-<hr>
-
-<?php
-$oIMDB = new IMDB('Fabian Beiner never made a movie. Yet!');
-if ($oIMDB->isReady) {
-    echo '<p><b>' . $oIMDB->getTitle() . '</b></p>';
-}
-else {
-    echo '<p>Movie not found!</p>';
-}
-?>
 </body>
 </html>
