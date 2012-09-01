@@ -78,6 +78,10 @@ class IMDB {
     const IMDB_VOTES        = '~<span itemprop="ratingCount">(.*)</span>~Ui';
     const IMDB_WRITER       = '~<h4 class="inline">\s+(?:Writer|Writers):\s+</h4>(.*)</div>~Ui';
 
+    // new key word
+    const IMDB_REVIEW_COUNT       = '~href="reviews"\s+title="(\d+) IMDb user reviews~Ui';
+    const IMDB_USA_RELEASE_DATE       = '~USA(.*)<a href="/date/(\d+)(.*)<a href="/year/(\d+)/">~Ui';
+    
     // cURL cookie file.
     private $_fCookie   = false;
     // IMDb url.
@@ -226,7 +230,7 @@ class IMDB {
         }
 
         // Check if there is a cache we can use.
-        $fCache = $this->_strRoot . '/cache/' . md5($url) . '.cache';
+        $fCache = $this->_strRoot . '/cache/' . md5($url) . '.html';
         if (file_exists($fCache)) {
             $bolUseCache = true;
             $intChanged  = filemtime($fCache);
@@ -317,13 +321,13 @@ class IMDB {
             }
 
             // Set the global source.
-            $this->$saveVar = preg_replace('~(\r|\n|\r\n)~', '', $saveVar);
+            $saveVar = preg_replace('~(\r|\n|\r\n)~', '', $saveVar);
                                 
                         
             // Save cache.
             if (!$bolFind) {
                 if (IMDB::IMDB_DEBUG) echo '<b>- Saved a new cache:</b> ' . $fCache . '<br>';
-                file_put_contents($fCache, $this->$saveVar);
+                file_put_contents($fCache, $saveVar);
             }
 
             return true;
@@ -877,13 +881,28 @@ class IMDB {
      */
     public function getReleaseDate() {
         if ($this->isReady) {
-            if ($strReturn = $this->matchRegex($this->_strSource, IMDB::IMDB_RELEASE_DATE, 1)) {
+            //if ($strReturn = $this->matchRegex($this->_strSource, IMDB::IMDB_RELEASE_DATE, 1)) {
+        	if ($strReturn = $this->matchRegex($this->_strReleaseinfo, IMDB::IMDB_USA_RELEASE_DATE, 1)) {
                 return str_replace('(', ' (', trim($strReturn));
             }
         }
         return $this->strNotFound;
     }
 
+    /**
+     * Returns the Reviews.
+     *
+     * @return string The review count
+     */
+    public function getReviewCount() {
+    	if ($this->isReady) {
+    		if ($strReturn = $this->matchRegex($this->_strSource, IMDB::IMDB_REVIEW_COUNT, 1)) {
+    			return trim($strReturn);
+    		}
+    	}
+    	return $this->strNotFound;
+    }
+    
     /**
      * Returns the runtime.
      *

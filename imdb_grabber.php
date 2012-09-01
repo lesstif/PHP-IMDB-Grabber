@@ -30,11 +30,16 @@ include_once 'imdb.class.php';
 $data = file_get_contents('input.txt', true);
 $convert = explode("\n", $data); //create array separate by new line
 
+
+fclose(STDOUT);
+
 foreach ($convert as $movie)
 {
 	$movie = chop($movie);
 	if ($movie == "")
 		continue;
+	
+	$STDOUT = fopen($movie . ".html", 'wb');
 	
 	$oIMDB = new IMDB($movie);
 	if ($oIMDB->isReady) {
@@ -65,6 +70,11 @@ foreach ($convert as $movie)
         echo '<li><p>Poster: <b>' . $oIMDB->getPoster() . '</b></p></li>';
         echo '<li><p>Rating: <b>' . $oIMDB->getRating() . '</b></p></li>';
         echo '<li><p>Release Date: <b>' . $oIMDB->getReleaseDate() . '</b></p></li>';
+        
+        echo '<li><p>Reviews: ' . '</p></li>';
+        echo '<ul><li><p>Reviews Count: <b>' . $oIMDB->getReviewCount() . '</b></p></li>';
+        echo '</ul>'; // Endof Reviews
+        
         echo '<li><p>Runtime: <b>' . $oIMDB->getRuntime() . '</b></p></li>';
         echo '<li><p>Seasons: <b>' . $oIMDB->getSeasons() . '</b></p></li>';
         echo '<li><p>Tagline: <b>' . $oIMDB->getTagline() . '</b></p></li>';
@@ -88,6 +98,8 @@ foreach ($convert as $movie)
 	else {
 	    echo '<p>Movie not found!</p>';
 	}
+	
+	fclose($STDOUT);
 }
 ?>
 
