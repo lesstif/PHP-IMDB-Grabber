@@ -321,7 +321,7 @@ class IMDB {
             }
 
             // Set the global source.
-            $saveVar = preg_replace('~(\r|\n|\r\n)~', '', $saveVar);
+            ////$saveVar = preg_replace('~(\r|\n|\r\n)~', '', $saveVar);
                                 
                         
             // Save cache.

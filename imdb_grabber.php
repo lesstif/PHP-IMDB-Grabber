@@ -27,11 +27,16 @@
 <?php
 include_once 'imdb.class.php';
 
+$fos = null;
+
+function print_file($file, $msg)
+{
+	fprintf ($file, $msg);
+	echo $msg;	
+}
+
 $data = file_get_contents('input.txt', true);
 $convert = explode("\n", $data); //create array separate by new line
-
-
-fclose(STDOUT);
 
 foreach ($convert as $movie)
 {
@@ -39,67 +44,67 @@ foreach ($convert as $movie)
 	if ($movie == "")
 		continue;
 	
-	$STDOUT = fopen($movie . ".html", 'wb');
+	$fos = fopen($movie . ".html", 'wb');
 	
 	$oIMDB = new IMDB($movie);
 	if ($oIMDB->isReady) {
-		echo "<ol>";
-        echo '<li><p>Also Known As: <b>' . $oIMDB->getAka() . '</b></p></li>';
-        echo '<li><p>Budget: <b>' . $oIMDB->getBudget() . '</b></p></li>';
-        echo '<li><p>Cast (limited to 5): <b>' . $oIMDB->getCast(5) . '</b></p></li>';
-        echo '<li><p>Cast as URL (default limited to 20): <b>' . $oIMDB->getCastAsUrl() . '</b></p></li>';
-        echo '<li><p>Cast and Character (limited to 10): <b>' . $oIMDB->getCastAndCharacter(10) . '</b></p></li>';
-        echo '<li><p>Cast and Character as URL (limited to 10): <b>' . $oIMDB->getCastAndCharacterAsUrl(10) . '</b></p></li>';
-        echo '<li><p>Color: <b>' . $oIMDB->getColor() . '</b></p></li>';
-        echo '<li><p>Company as URL: <b>' . $oIMDB->getCompanyAsUrl() . '</b></p></li>';
-        echo '<li><p>Company: <b>' . $oIMDB->getCompany() . '</b></p></li>';
-        echo '<li><p>Countries as URL: <b>' . $oIMDB->getCountryAsUrl() . '</b></p></li>';
-        echo '<li><p>Countries: <b>' . $oIMDB->getCountry() . '</b></p></li>';
-        echo '<li><p>Creators as URL: <b>' . $oIMDB->getCreatorAsUrl() . '</b></p></li>';
-        echo '<li><p>Creators: <b>' . $oIMDB->getCreator() . '</b></p></li>';
-        echo '<li><p>Directors as URL: <b>' . $oIMDB->getDirectorAsUrl() . '</b></p></li>';
-        echo '<li><p>Directors: <b>' . $oIMDB->getDirector() . '</b></p></li>';
-        echo '<li><p>Genres as URL: <b>' . $oIMDB->getGenreAsUrl() . '</b></p></li>';
-        echo '<li><p>Genres: <b>' . $oIMDB->getGenre() . '</b></p></li>';
-        echo '<li><p>Languages as URL: <b>' . $oIMDB->getLanguagesAsUrl() . '</b></p></li>';
-        echo '<li><p>Languages: <b>' . $oIMDB->getLanguages() . '</b></p></li>';
-        echo '<li><p>Location as URL: <b>' . $oIMDB->getLocationAsUrl() . '</b></p></li>';
-        echo '<li><p>Location: <b>' . $oIMDB->getLocation() . '</b></p></li>';
-        echo '<li><p>MPAA: <b>' . $oIMDB->getMpaa() . '</b></p></li>';
-        echo '<li><p>Plot (shortened to 150 chars): <b>' . $oIMDB->getPlot(150) . '</b></p></li>';
-        echo '<li><p>Poster: <b>' . $oIMDB->getPoster() . '</b></p></li>';
-        echo '<li><p>Rating: <b>' . $oIMDB->getRating() . '</b></p></li>';
-        echo '<li><p>Release Date: <b>' . $oIMDB->getReleaseDate() . '</b></p></li>';
+		print_file($fos,"<ol>");
+        print_file($fos,'<li><p>Also Known As: <b>' . $oIMDB->getAka() . '</b></p></li>');
+        print_file($fos,'<li><p>Budget: <b>' . $oIMDB->getBudget() . '</b></p></li>');
+        print_file($fos,'<li><p>Cast (limited to 5): <b>' . $oIMDB->getCast(5) . '</b></p></li>');
+        print_file($fos,'<li><p>Cast as URL (default limited to 20): <b>' . $oIMDB->getCastAsUrl() . '</b></p></li>');
+        print_file($fos,'<li><p>Cast and Character (limited to 10): <b>' . $oIMDB->getCastAndCharacter(10) . '</b></p></li>');
+        print_file($fos,'<li><p>Cast and Character as URL (limited to 10): <b>' . $oIMDB->getCastAndCharacterAsUrl(10) . '</b></p></li>');
+        print_file($fos,'<li><p>Color: <b>' . $oIMDB->getColor() . '</b></p></li>');
+        print_file($fos,'<li><p>Company as URL: <b>' . $oIMDB->getCompanyAsUrl() . '</b></p></li>');
+        print_file($fos,'<li><p>Company: <b>' . $oIMDB->getCompany() . '</b></p></li>');
+        print_file($fos,'<li><p>Countries as URL: <b>' . $oIMDB->getCountryAsUrl() . '</b></p></li>');
+        print_file($fos,'<li><p>Countries: <b>' . $oIMDB->getCountry() . '</b></p></li>');
+        print_file($fos,'<li><p>Creators as URL: <b>' . $oIMDB->getCreatorAsUrl() . '</b></p></li>');
+        print_file($fos,'<li><p>Creators: <b>' . $oIMDB->getCreator() . '</b></p></li>');
+        print_file($fos,'<li><p>Directors as URL: <b>' . $oIMDB->getDirectorAsUrl() . '</b></p></li>');
+        print_file($fos,'<li><p>Directors: <b>' . $oIMDB->getDirector() . '</b></p></li>');
+        print_file($fos,'<li><p>Genres as URL: <b>' . $oIMDB->getGenreAsUrl() . '</b></p></li>');
+        print_file($fos,'<li><p>Genres: <b>' . $oIMDB->getGenre() . '</b></p></li>');
+        print_file($fos,'<li><p>Languages as URL: <b>' . $oIMDB->getLanguagesAsUrl() . '</b></p></li>');
+        print_file($fos,'<li><p>Languages: <b>' . $oIMDB->getLanguages() . '</b></p></li>');
+        print_file($fos,'<li><p>Location as URL: <b>' . $oIMDB->getLocationAsUrl() . '</b></p></li>');
+        print_file($fos,'<li><p>Location: <b>' . $oIMDB->getLocation() . '</b></p></li>');
+        print_file($fos,'<li><p>MPAA: <b>' . $oIMDB->getMpaa() . '</b></p></li>');
+        print_file($fos,'<li><p>Plot (shortened to 150 chars): <b>' . $oIMDB->getPlot(150) . '</b></p></li>');
+        print_file($fos,'<li><p>Poster: <b>' . $oIMDB->getPoster() . '</b></p></li>');
+        print_file($fos,'<li><p>Rating: <b>' . $oIMDB->getRating() . '</b></p></li>');
+        print_file($fos,'<li><p>Release Date: <b>' . $oIMDB->getReleaseDate() . '</b></p></li>');
         
-        echo '<li><p>Reviews: ' . '</p></li>';
-        echo '<ul><li><p>Reviews Count: <b>' . $oIMDB->getReviewCount() . '</b></p></li>';
-        echo '</ul>'; // Endof Reviews
+        print_file($fos,'<li><p>Reviews: ' . '</p></li>');
+        print_file($fos,'<ul><li><p>Reviews Count: <b>' . $oIMDB->getReviewCount() . '</b></p></li>');
+        print_file($fos,'</ul>'); // Endof Reviews
         
-        echo '<li><p>Runtime: <b>' . $oIMDB->getRuntime() . '</b></p></li>';
-        echo '<li><p>Seasons: <b>' . $oIMDB->getSeasons() . '</b></p></li>';
-        echo '<li><p>Tagline: <b>' . $oIMDB->getTagline() . '</b></p></li>';
-        echo '<li><p>Title: <b>' . $oIMDB->getTitle() . '</b></p></li>';
-        echo '<li><p>Trailer: <br>';
+        print_file($fos,'<li><p>Runtime: <b>' . $oIMDB->getRuntime() . '</b></p></li>');
+        print_file($fos,'<li><p>Seasons: <b>' . $oIMDB->getSeasons() . '</b></p></li>');
+        print_file($fos,'<li><p>Tagline: <b>' . $oIMDB->getTagline() . '</b></p></li>');
+        print_file($fos,'<li><p>Title: <b>' . $oIMDB->getTitle() . '</b></p></li>');
+        print_file($fos,'<li><p>Trailer: <br>');
         if ($oIMDB->getTrailerAsUrl() != 'n/A') {
-            echo '<iframe width="660" height="500" scrolling="no" border="0" src="' . $oIMDB->getTrailerAsUrl() . '"></iframe>';
+            print_file($fos,'<iframe width="660" height="500" scrolling="no" border="0" src="' . $oIMDB->getTrailerAsUrl() . '"></iframe>');
         }
         else {
-            echo 'No trailer found.';
+            print_file($fos,'No trailer found.');
         }
-        echo '</p></li>';
-        echo '<p><li>Url: <b><a href="' . $oIMDB->getUrl() . '">' . $oIMDB->getUrl() . '</a></b></p></li>';
-        echo '<p><li>Votes: <b>' . $oIMDB->getVotes() . '</b></p></li>';
-        echo '<p><li>Writers as URL: <b>' . $oIMDB->getWriterAsUrl() . '</b></p></li>';
-        echo '<p><li>Writers: <b>' . $oIMDB->getWriter() . '</b></p></li>';
-        echo '<p><li>Year: <b>' . $oIMDB->getYear() . '</b></p></li>';
+        print_file($fos,'</p></li>');
+        print_file($fos,'<p><li>Url: <b><a href="' . $oIMDB->getUrl() . '">' . $oIMDB->getUrl() . '</a></b></p></li>');
+        print_file($fos,'<p><li>Votes: <b>' . $oIMDB->getVotes() . '</b></p></li>');
+        print_file($fos,'<p><li>Writers as URL: <b>' . $oIMDB->getWriterAsUrl() . '</b></p></li>');
+        print_file($fos,'<p><li>Writers: <b>' . $oIMDB->getWriter() . '</b></p></li>');
+        print_file($fos,'<p><li>Year: <b>' . $oIMDB->getYear() . '</b></p></li>');
         
-        echo "</ol>";
+        print_file($fos,"</ol>");		
 	}
 	else {
-	    echo '<p>Movie not found!</p>';
+	    print_file($fos,'<p>Movie not found!</p>');
 	}
 	
-	fclose($STDOUT);
+	fclose($fos);
 }
 ?>
 
