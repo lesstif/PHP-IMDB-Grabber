@@ -63,9 +63,10 @@
     
     const IMDB_RATING_COUNT = '~<span itemprop="ratingCount">([\d \',]+)</span>~Ui';
     
-    const IMDB_REVIEWS_COUNT = '~<span itemprop="reviewCount">((?:[0-9]+\.[0-9])+)</span>~Ui';
-    // "span itempro2342";
-    
+    const IMDB_REVIEWS_COUNT = '~<span itemprop="reviewCount">([0-9]+)</span>(\s)*user~Ui';
+
+    const IMDB_CRITIC_COUNT = '~<span itemprop="reviewCount">([0-9]+)</span>(\s)*critic~Ui';
+        
     public function getRating() {
     	
     		if ($strReturn = $this->matchRegex($this->_strSource, IMDB::IMDB_RATING, 1)) {
@@ -93,6 +94,15 @@
     
     	return $this->strNotFound;
     }
+    
+    public function getCriticCount() {
+    	 
+    	if ($strReturn = $this->matchRegex($this->_strSource, IMDB::IMDB_CRITIC_COUNT, 1)) {
+    		return trim($strReturn);
+    	}
+    	 
+    	return $this->strNotFound;
+    }
  }
  
  function print_file($file, $msg)
@@ -113,5 +123,7 @@
     //print_file($fos,'<li><p>getRating: <b>' . $oIMDB->getRating() . '</b></p></li>');
     print_file($fos, "getRating=" . $oIMDB->getRating());
     print_file($fos, "getRatingCount=" . $oIMDB->getRatingCount());
+    print_file($fos, "getReviewsCount=" . $oIMDB->getReviewsCount());
+    print_file($fos, "getCriticCount=" . $oIMDB->getCriticCount());
 
 ?>
