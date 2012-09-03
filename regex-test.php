@@ -81,8 +81,9 @@
         
     const IMDB_CRITIC_REVIEWS_COUNT = '~href="criticreviews"\s+title="([0-9]+)\s+review excerpts provided by Metacritic\.com"~Ui';
     
-    const IMDB_RELEASE_INFO = '~((USA))</a></b></td>\s+<td align="right"><a href="/date/\(\.\*\)/">((?i:(?:3[01]|[12][0-9]|[1-9])[ \t]+(?:January|February|March|April|May|June|July|August|September|October|November|December)))</a> <a href="/year/\\d\+/">[0-9]{4}</a></td>\s+<td>((?:\(?.*\)?){35})</td></tr>~Ui';
+    //const IMDB_RELEASE_INFO = '~((USA))</a></b></td>\s+<td align="right"><a href="/date/\(\.\*\)/">((?i:(?:3[01]|[12][0-9]|[1-9])[ \t]+(?:January|February|March|April|May|June|July|August|September|October|November|December)))</a> <a href="/year/\\d\+/">[0-9]{4}</a></td>\s+<td>((?:\(?.*\)?){35})</td></tr>~Ui';
     
+    const IMDB_RELEASE_INFO = '~region=(A[D-GILNQ-UWX]|B[ABDEGHL-ORSTVZ]|C[ACHKLNORUXYZ]|D[EKMO]|E[CES]|F[IJKMOR]|G[BD-GILPR-UY]|H[KMNRTU]|I[DEL-OQ-T]|J[EMOP]|K[HINPRWY]|L[ABCIKTUV]|M[ACEFHKM-QSTVXY]|N[CFILOPRUZ]|OM|P[AE-HK-NRSTWY]|QA|R[EOS]|S[ABEG-KMRVY]|T[CFHKLORTVW]|U[AMSY]|V[ACEGINU]|W[FS]|Y[ET])"|/">((?i:(?:3[01]|[12][0-9]|[1-9])[ \t]+(?:January|February|March|April|May|June|July|August|September|October|November|December)))</a>|">([0-9]{4})</a>|<td>([^\n\r/<>dt]+)</td>~Ui'; 
 
     public function getVariable($varName) {
     
@@ -139,12 +140,19 @@
     	return $this->strNotFound;
     }
     
-    public function getReleasInfo($state = "USA") {
-    
-    	if ($strReturn = $this->matchRegex($this->_strReleaseInfo, IMDB::IMDB_RELEASE_INFO, 1)) {
-    		return trim($strReturn);
+    public function getReleasInfo() {
+    	$arrMatches = null;
+    	
+    	preg_match_all(IMDB::IMDB_RELEASE_INFO, $this->_strReleaseInfo, $arrMatches, PREG_PATTERN_ORDER);
+    	
+    	echo "Found " . count($arrMatches[0]) . " Release Info\n"; 
+    	for ($i = 0; $i < count($arrMatches[0]); $i++) {
+    		# Matched text = $arrMatches[0][$i];
+    		
+    		print "$i th match = " . $arrMatches[0][$i] . "\r\n";
+    		
     	}
-    
+    	    
     	return $this->strNotFound;
     }
  }
