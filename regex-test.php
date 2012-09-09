@@ -6,6 +6,8 @@
  	private $_strReview = NULL;
  	private $_strReleaseInfo = NULL;
  	
+ 	private $strR = NULL;
+ 	
  	private $strNotFound = "Not Found";
  	
  	public function __construct($con) {
@@ -83,8 +85,15 @@
     
     //const IMDB_RELEASE_INFO = '~((USA))</a></b></td>\s+<td align="right"><a href="/date/\(\.\*\)/">((?i:(?:3[01]|[12][0-9]|[1-9])[ \t]+(?:January|February|March|April|May|June|July|August|September|October|November|December)))</a> <a href="/year/\\d\+/">[0-9]{4}</a></td>\s+<td>((?:\(?.*\)?){35})</td></tr>~Ui';
     
-    const IMDB_RELEASE_INFO = '~region=(A[D-GILNQ-UWX]|B[ABDEGHL-ORSTVZ]|C[ACHKLNORUXYZ]|D[EKMO]|E[CES]|F[IJKMOR]|G[BD-GILPR-UY]|H[KMNRTU]|I[DEL-OQ-T]|J[EMOP]|K[HINPRWY]|L[ABCIKTUV]|M[ACEFHKM-QSTVXY]|N[CFILOPRUZ]|OM|P[AE-HK-NRSTWY]|QA|R[EOS]|S[ABEG-KMRVY]|T[CFHKLORTVW]|U[AMSY]|V[ACEGINU]|W[FS]|Y[ET])"|/">((?i:(?:3[01]|[12][0-9]|[1-9])[ \t]+(?:January|February|March|April|May|June|July|August|September|October|November|December)))</a>|">([0-9]{4})</a>|<td>([^\n\r/<>dt]+)</td>~Ui'; 
+    const IMDB_RELEASE_INFO = 
+    //'~region=(A[D-GILNQ-UWX]|B[ABDEGHL-ORSTVZ]|C[ACHKLNORUXYZ]|D[EKMO]|E[CES]|F[IJKMOR]|G[BD-GILPR-UY]|H[KMNRTU]|I[DEL-OQ-T]|J[EMOP]|K[HINPRWY]|L[ABCIKTUV]|M[ACEFHKM-QSTVXY]|N[CFILOPRUZ]|OM|P[AE-HK-NRSTWY]|QA|R[EOS]|S[ABEG-KMRVY]|T[CFHKLORTVW]|U[AMSY]|V[ACEGINU]|W[FS]|Y[ET])"|/">((?i:(?:3[01]|[12][0-9]|[1-9])[ \t]+(?:January|February|March|April|May|June|July|August|September|October|November|December)))</a>|">([0-9]{4})</a>|<td>([^\n\r/<>dt]+)</td>~Ui';
+    '~region=(?:A[D-GILNQ-UWX]|B[ABDEGHL-ORSTVZ]|C[ACHKLNORUXYZ]|D[EKMO]|E[CES]|F[IJKMOR]|G[BD-GILPR-UY]|H[KMNRTU]|I[DEL-OQ-T]|J[EMOP]|K[HINPRWY]|L[ABCIKTUV]|M[ACEFHKM-QSTVXY]|N[CFILOPRUZ]|OM|P[AE-HK-NRSTWY]|QA|R[EOS]|S[ABEG-KMRVY]|T[CFHKLORTVW]|U[AMSY]|V[ACEGINU]|W[FS]|Y[ET])"|/">(((?i:(?:3[01]|[12][0-9]|[1-9])[ \t]+(?:January|February|March|April|May|June|July|August|September|October|November|December))))</a>|">([0-9]+)</a>|<td>([^\n\r/<>dt])?</td>~Ui';
+     
 
+    const IMDB_RELEASE_INFO2 =
+    //'~region=(A[D-GILNQ-UWX]|B[ABDEGHL-ORSTVZ]|C[ACHKLNORUXYZ]|D[EKMO]|E[CES]|F[IJKMOR]|G[BD-GILPR-UY]|H[KMNRTU]|I[DEL-OQ-T]|J[EMOP]|K[HINPRWY]|L[ABCIKTUV]|M[ACEFHKM-QSTVXY]|N[CFILOPRUZ]|OM|P[AE-HK-NRSTWY]|QA|R[EOS]|S[ABEG-KMRVY]|T[CFHKLORTVW]|U[AMSY]|V[ACEGINU]|W[FS]|Y[ET])"|/">((?i:(?:3[01]|[12][0-9]|[1-9])[ \t]+(?:January|February|March|April|May|June|July|August|September|October|November|December)))</a>|">([0-9]{4})</a>|<td>([^\n\r/<>dt]+)</td>~Ui';
+    '~region=US">USA</a></b></td> <td align="right"><a href="\/date\/~Ui';   
+ 
     public function getVariable($varName) {
     
     	if ($strReturn = $this->matchRegex($this->_strSource, $$varName, 1)) {
@@ -140,19 +149,59 @@
     	return $this->strNotFound;
     }
     
-    public function getReleasInfo() {
+    /**
+     * 
+     * @param string $cname 개봉일을 얻을 국가명
+     * @return string
+     */
+    public function getReleasInfo($cname) {
+    	$this->strR = NULL;
+    	
     	$arrMatches = null;
     	
-    	preg_match_all(IMDB::IMDB_RELEASE_INFO, $this->_strReleaseInfo, $arrMatches, PREG_PATTERN_ORDER);
+    	preg_match_all('%<tr><td><b><a href="/calendar/\?region=(.+?)</tr>%s', $this->_strReleaseInfo, $arrMatches, PREG_PATTERN_ORDER);
     	
-    	echo "Found " . count($arrMatches[0]) . " Release Info\n"; 
     	for ($i = 0; $i < count($arrMatches[0]); $i++) {
-    		# Matched text = $arrMatches[0][$i];
+    		# Matched text = $arrMatches[0][$i]; 	 
+
+    		$sub = null;
+    	
+    		// JP">Japan</a></b></td>    <td align="right"><a href="/date/02-22/">22 February</a> <a href="/year/2008/">2008</a></td>    <td> (Tokyo) (premiere)</td>
+    	 	$tmp = $arrMatches[1][$i];
     		
-    		print "$i th match = " . $arrMatches[0][$i] . "\r\n";
+    		// 파싱을 위해 앞을 <td> 로 변경
+    		$tmp[0] = '<'; $tmp[1] = 't'; $tmp[2] = 'd';
     		
+    		// <td align="right"> 을 <td> 로 변경
+    		$tmp = str_ireplace('<td align="right">', '<td>', $tmp);   				
+    		preg_match_all('%<td>(.+?)</td>%s', $tmp, $sub, PREG_PATTERN_ORDER);
+
+    		$cnt = count($sub[0]);
+    		    		
+    		$nation = str_ireplace('</a></b>', '', $sub[1][0]);
+    		
+    		preg_match_all('%/date/(?P<dt>(?:1[0-2]|0[1-9])-(?:3[01]|[12][0-9]|0[1-9]))/"|/year/(?P<year>[0-9]+)/"%s', $sub[1][1], $dt, PREG_PATTERN_ORDER); ;
+    
+    		// 개봉장소
+    		if ($cnt > 2)
+    			$loc = $sub[1][2];
+    		else
+    			$loc = "";    		
+    		
+    		if ($nation == $cname) {
+    			$this->strR .= "$nation, " . $dt["year"][1] . "-" . $dt["dt"][0] . ",$loc\n";
+    		}    		
     	}
-    	    
+    	      	    
+    	return $this->strR;
+    }
+    
+    public function getReleasInfo2() {
+    	
+    	if ($strReturn = $this->matchRegex($this->_strReleaseInfo, IMDB::IMDB_RELEASE_INFO2, 1)) {
+    		return trim($strReturn);
+    	}
+    
     	return $this->strNotFound;
     }
  }
@@ -168,7 +217,9 @@
  	
     //testStream();
     $content=  file_get_contents("cache/" . "8b3b1cbb1b6cb55234c96b79cfb89fda.html");
-    $releaseinfo = file_get_contents("cache/" . "1660aa3f839e972ae5a79827eae37a38.html");        
+    $releaseinfo = file_get_contents("cache/" . 
+    		//"1660aa3f839e972ae5a79827eae37a38.html");        
+    		"bc_release_info.html");
     $review = file_get_contents("cache/" . "222a8a41b4d18b1b3111da1c0be057d9.html");
     
     $oIMDB = new IMDB($content);
@@ -176,14 +227,17 @@
     $oIMDB->setReview($review);
         
     print_file($fos,"<ol>");
+    
+    /*
     //print_file($fos,'<li><p>getRating: <b>' . $oIMDB->getRating() . '</b></p></li>');
     print_file($fos, "getRating=" . $oIMDB->getRating());
     print_file($fos, "getRatingCount=" . $oIMDB->getRatingCount());
     print_file($fos, "getReviewsCount=" . $oIMDB->getReviewsCount());
     print_file($fos, "getCriticCount=" . $oIMDB->getCriticCount());
     print_file($fos, "getCriticReviewCount=" . $oIMDB->getCriticReviewCount());
+    */
     
-    print_file($fos, "getReleasInfo=" . $oIMDB->getReleasInfo());
+    print_file($fos, "getReleasInfo=" . $oIMDB->getReleasInfo('USA'));
     
     //print_file($fos, "IMDB_CRITIC_REVIEWS_COUNT=" . $oIMDB->getVariable("IMDB::IMDB_CRITIC_REVIEWS_COUNT"));
   

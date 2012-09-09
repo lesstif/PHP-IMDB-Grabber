@@ -81,17 +81,19 @@ class IMDB {
     // new key word
     const IMDB_REVIEW_COUNT       = '~href="reviews"\s+title="(\d+) IMDb user reviews~Ui';
     const IMDB_USA_RELEASE_DATE       = '~USA(.*)<a href="/date/(\d+)(.*)<a href="/year/(\d+)/">~Ui';
-    
+           
     // cURL cookie file.
     private $_fCookie   = false;
     // IMDb url.
     private $_strUrl    = NULL;
     // IMDb source.
     private $_strSource = NULL;
+    
     // IMDb review.
     private $_strReviews = NULL;
     // IMDb releaseinfo.
-    private $_strReleaseinfo = NULL;
+    private $_strReleaseInfo = NULL;
+    
     // IMDb cache.
     private $_strCache  = 0;
     // IMDb posters directory.
@@ -142,11 +144,12 @@ class IMDB {
         }
         // Set global cache and fetch the data.
         $this->_intCache = (int)$intCache;
-        IMDB::fetchUrl($strSearch, &$this->_strSource, false);
+        IMDB::fetchUrl($strSearch);
         
-        IMDB::fetchUrl($this->_strUrl . "reviews", &$this->_strReviews, true);
-        IMDB::fetchUrl($this->_strUrl . "releaseinfo", &$this->_strReleaseinfo, true);
-             
+        // fetch Sub url
+        IMDB::fetchSubUrl($this->_strUrl, "releaseinfo");
+        IMDB::fetchSubUrl($this->_strUrl,  "reviews");
+        
     }
 
     /**
@@ -186,12 +189,110 @@ class IMDB {
     /**
      * Fetch data from the given url.
      *
-     * @param string  $strSearch The movie name / IMDb url
+     * @param string  $url The movie name / IMDb url
+     * @param string  $sub The movie subinfo / releaseinfo, reviews, etc...
      * @param string  $strSave   The path to the file
-     * @param string  $isSubUrl  check weather subUrl or not
      * @return boolean
      */
-    private function fetchUrl($strSearch, &$saveVar, $isSubUrl) {
+    private function fetchSubUrl($url, $sub) {
+    	$cachefile = $url . $sub;
+    	    
+    	// Check if there is a cache we can use.
+    	$fCache = $this->_strRoot . '/cache/' . md5($cachefile) . '.html';
+    	if (file_exists($fCache)) {
+    		$bolUseCache = true;
+    		$intChanged  = filemtime($fCache);
+    		$intNow      = time();
+    		$intDiff     = round(abs($intNow - $intChanged) / 60);
+    		if ($intDiff > $this->_intCache) {
+    			$bolUseCache = false;
+    		}
+    	}
+    	else {
+    		$bolUseCache = false;
+    	}
+    
+    	if ($bolUseCache) {
+    		if (IMDB::IMDB_DEBUG) echo '<b>- Using cache for ' . $strSearch . ' from ' . $fCache . '</b><br>';
+    		$strOutput = file_get_contents($fCache);
+    		goto proc;
+    	}
+    	else {
+    		// Cookie path.
+    		if (function_exists('sys_get_temp_dir')) {
+    			$this->_fCookie = tempnam(sys_get_temp_dir(), 'imdb');
+    			if (IMDB::IMDB_DEBUG) echo '<b>- Path to cookie:</b> ' . $this->_fCookie . '<br>';
+    		}
+    		// Initialize and run the request.
+    		if (IMDB::IMDB_DEBUG) echo '<b>- Run cURL on:</b> ' . $cachefile . '<br>';
+    		$oCurl = curl_init($cachefile);
+    		curl_setopt_array($oCurl, array (
+    		CURLOPT_VERBOSE => FALSE,
+    		CURLOPT_HEADER => TRUE,
+    		CURLOPT_FRESH_CONNECT => TRUE,
+    		CURLOPT_RETURNTRANSFER => TRUE,
+    		CURLOPT_TIMEOUT => IMDB::IMDB_TIMEOUT,
+    		CURLOPT_CONNECTTIMEOUT => 0,
+    		CURLOPT_REFERER => 'http://www.google.com',
+    		CURLOPT_USERAGENT, 'Googlebot/2.1 (+http://www.google.com/bot.html)',
+    		CURLOPT_FOLLOWLOCATION => FALSE,
+    		CURLOPT_COOKIEFILE => $this->_fCookie
+    		));
+    	
+    	
+
+    		$strOutput = curl_exec($oCurl);
+    		
+    		curl_close($oCurl);
+    	}
+
+proc:    	
+   		$content = NULL;
+    		
+   		if ($sub == "releaseinfo")
+   		{
+   			$this->_strReleaseinfo = $strOutput;
+   			$content = &$this->_strReleaseinfo;
+   		}
+   		else if ($sub == "reviews")
+   		{
+   			$this->_strReviews = $strOutput;
+   			$content = &$this->_strReviews;
+   		}
+        		
+   		// Remove cookie.
+   		if ($this->_fCookie) {
+   			unlink($this->_fCookie);
+   		}
+    
+   		// Check if the request actually worked.
+   		if ($strOutput === FALSE) {
+   			if (IMDB::IMDB_DEBUG) echo '<b>! cURL error:</b> ' . $cachefile . '<br>';
+   			if ($this->_strSource = @file_get_contents($fCache)) {
+   				return true;
+   			}
+  			return false;
+   		}     	 		
+    
+   		// Set the global source.
+   		$content = preg_replace('~(\r|\n|\r\n)~', '', $content);
+    
+   		// Save cache.
+		if (IMDB::IMDB_DEBUG) echo '<b>- Saved a new cache:</b> ' . $fCache . '<br>';
+		file_put_contents($fCache, $content);
+    
+   		return true;
+
+    }
+    
+    /**
+     * Fetch data from the given url.
+     *
+     * @param string  $strSearch The movie name / IMDb url
+     * @param string  $strSave   The path to the file
+     * @return boolean
+     */
+    private function fetchUrl($strSearch) {
         // Remove whitespaces.
         $strSearch = trim($strSearch);
 
@@ -203,21 +304,16 @@ class IMDB {
             echo '<pre>Running PHP-IMDB-Grabber v' . IMDB::IMDB_VERSION . '.</pre>';
         }
 
-        $url = NULL;
-        
         // Check for a valid IMDb URL and use it, if available.
         if ($strId = IMDB::matchRegex($strSearch, IMDB::IMDB_URL, 4)) {
             $this->_strId  = preg_replace('~[\D]~', '', $strId);
-            $url = $this->_strUrl = 'http://www.imdb.com/title/tt' . $this->_strId . '/';
-            if ($isSubUrl)
-            	$url = $strSearch;
-            	
+            $this->_strUrl = 'http://www.imdb.com/title/tt' . $this->_strId . '/';
             $bolFind       = false;
             $this->isReady = true;
         }
         // Otherwise try to find one.
         else {
-            $url = $this->_strUrl = 'http://www.imdb.com/find?s=all&q=' . str_replace(' ', '+', $strSearch);
+            $this->_strUrl = 'http://www.imdb.com/find?s=all&q=' . str_replace(' ', '+', $strSearch);
             $bolFind       = true;
             // Check for cached redirects of this search.
             if ($fRedirect = @file_get_contents($this->_strRoot . '/cache/' . md5($this->_strUrl) . '.redir')) {
@@ -230,7 +326,7 @@ class IMDB {
         }
 
         // Check if there is a cache we can use.
-        $fCache = $this->_strRoot . '/cache/' . md5($url) . '.html';
+        $fCache = $this->_strRoot . '/cache/' . md5($this->_strUrl) . '.html';
         if (file_exists($fCache)) {
             $bolUseCache = true;
             $intChanged  = filemtime($fCache);
@@ -256,8 +352,8 @@ class IMDB {
                 if (IMDB::IMDB_DEBUG) echo '<b>- Path to cookie:</b> ' . $this->_fCookie . '<br>';
             }
             // Initialize and run the request.
-            if (IMDB::IMDB_DEBUG) echo '<b>- Run cURL on:</b> ' . $url . '<br>';
-            $oCurl = curl_init($url);
+            if (IMDB::IMDB_DEBUG) echo '<b>- Run cURL on:</b> ' . $this->_strUrl . '<br>';
+            $oCurl = curl_init($this->_strUrl);
             curl_setopt_array($oCurl, array (
                                             CURLOPT_VERBOSE => FALSE,
                                             CURLOPT_HEADER => TRUE,
@@ -271,14 +367,13 @@ class IMDB {
                                             CURLOPT_COOKIEFILE => $this->_fCookie
                                             ));
             $strOutput = curl_exec($oCurl);
-            
-           	$saveVar = $strOutput;
-                       
+            $this->_strSource = $strOutput;
+
             // Remove cookie.
             if ($this->_fCookie) {
-            	unlink($this->_fCookie);
+                unlink($this->_fCookie);
             }
-            
+
             // Check if the request actually worked.
             if ($strOutput === FALSE) {
                 if (IMDB::IMDB_DEBUG) echo '<b>! cURL error:</b> ' . $_strUrl . '<br>';
@@ -293,7 +388,7 @@ class IMDB {
             curl_close($oCurl);
 
             // Check if there is a redirect given (IMDb sometimes does not return 301 for this...).
-            $fRedirect = $this->_strRoot . '/cache/' . md5($url) . '.redir';
+            $fRedirect = $this->_strRoot . '/cache/' . md5($this->_strUrl) . '.redir';
             if ($strMatch = $this->matchRegex($strOutput, IMDB::IMDB_REDIRECT, 1)) {
                 $arrExplode = explode('?fr=', $strMatch);
                 $strMatch   = ($arrExplode[0] ? $arrExplode[0] : $strMatch);
@@ -302,7 +397,7 @@ class IMDB {
                 if (IMDB::IMDB_DEBUG) echo '<b>- Saved a new redirect:</b> ' . $fRedirect . '<br>';
                 file_put_contents($fRedirect, $strMatch);
                 // Run the cURL request again with the new url.
-                IMDB::fetchUrl($strMatch, &$saveVar, $isSubUrl);
+                IMDB::fetchUrl($strMatch);
             }
             // Check if any of the search regexes is matching.
             elseif (($strMatch = $this->matchRegex($strOutput, IMDB::IMDB_SEARCH1, 1)) || ($strMatch = $this->matchRegex($strOutput, IMDB::IMDB_SEARCH2, 1))) {
@@ -312,7 +407,7 @@ class IMDB {
                 if (IMDB::IMDB_DEBUG) echo '<b>- Saved a new redirect:</b> ' . $fRedirect . '<br>';
                 file_put_contents($fRedirect, $strMatch);
                 // Run the cURL request again with the new url.
-                IMDB::fetchUrl($strMatch, &$saveVar, $isSubUrl);
+                IMDB::fetchUrl($strMatch);
             }
             // If it's not a redirect and the HTTP response is not 200 or 302, abort.
             elseif ($arrInfo['http_code'] != 200 && $arrInfo['http_code'] != 302) {
@@ -321,13 +416,12 @@ class IMDB {
             }
 
             // Set the global source.
-            ////$saveVar = preg_replace('~(\r|\n|\r\n)~', '', $saveVar);
-                                
-                        
+            $this->_strSource = preg_replace('~(\r|\n|\r\n)~', '', $this->_strSource);
+
             // Save cache.
             if (!$bolFind) {
                 if (IMDB::IMDB_DEBUG) echo '<b>- Saved a new cache:</b> ' . $fCache . '<br>';
-                file_put_contents($fCache, $saveVar);
+                file_put_contents($fCache, $this->_strSource);
             }
 
             return true;
@@ -881,14 +975,61 @@ class IMDB {
      */
     public function getReleaseDate() {
         if ($this->isReady) {
-            //if ($strReturn = $this->matchRegex($this->_strSource, IMDB::IMDB_RELEASE_DATE, 1)) {
-        	if ($strReturn = $this->matchRegex($this->_strReleaseinfo, IMDB::IMDB_USA_RELEASE_DATE, 1)) {
+            if ($strReturn = $this->matchRegex($this->_strSource, IMDB::IMDB_RELEASE_DATE, 1)) {
                 return str_replace('(', ' (', trim($strReturn));
             }
         }
         return $this->strNotFound;
     }
 
+    /**
+     *
+     * @param string $nationName 개봉일을 얻을 국가명
+     * @return string
+     */
+    public function getReleasInfoByNation($nationName) {
+    	$strReaseInfo = NULL;
+    	 
+    	$arrMatches = null;
+    	 
+    	preg_match_all('~<tr><td><b><a href="/calendar/\?region=(.+?)</tr>~Ui', $this->_strReleaseInfo, $arrMatches, PREG_PATTERN_ORDER);
+
+    	print "Match ReleaseInfo=" . count($arrMatches[0]) . "\n";
+    	
+    	for ($i = 0; $i < count($arrMatches[0]); $i++) {
+    		# Matched text = $arrMatches[0][$i];
+    
+    		$sub = null;
+    		 
+    		// JP">Japan</a></b></td>    <td align="right"><a href="/date/02-22/">22 February</a> <a href="/year/2008/">2008</a></td>    <td> (Tokyo) (premiere)</td>
+    		$tmp = $arrMatches[1][$i];
+    
+    		// 파싱을 위해 앞을 <td> 로 변경
+    		$tmp[0] = '<'; $tmp[1] = 't'; $tmp[2] = 'd';
+    
+    		// <td align="right"> 을 <td> 로 변경
+    		$tmp = str_ireplace('<td align="right">', '<td>', $tmp);
+    		preg_match_all('%<td>(.+?)</td>%s', $tmp, $sub, PREG_PATTERN_ORDER);
+    
+    		$cnt = count($sub[0]);
+    
+    		$nation = str_ireplace('</a></b>', '', $sub[1][0]);
+    
+    		preg_match_all('%/date/(?P<dt>(?:1[0-2]|0[1-9])-(?:3[01]|[12][0-9]|0[1-9]))/"|/year/(?P<year>[0-9]+)/"%s', $sub[1][1], $dt, PREG_PATTERN_ORDER); ;
+    
+    		// 개봉장소
+    		if ($cnt > 2)
+    			$loc = $sub[1][2];
+    		else
+    			$loc = "";
+    
+    		if ($nation == $cname) {
+    			$strReaseInfo .= "$nation, " . $dt["year"][1] . "-" . $dt["dt"][0] . ",$loc\n";
+    		}
+    	}
+    
+    	return $strReaseInfo;
+    }
     /**
      * Returns the Reviews.
      *
@@ -1145,4 +1286,3 @@ class IMDB {
         return $oData;
     }
 }
-
