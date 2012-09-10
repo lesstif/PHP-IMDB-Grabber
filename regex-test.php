@@ -204,6 +204,40 @@
     
     	return $this->strNotFound;
     }
+    ///
+    public function getMetaScore() {
+    	$arrMatches = "";
+    	
+	    preg_match_all('%<a href="criticreviews">(?P<cr1>[0-9]+)/(?P<cr2>[0-9]+)</a>%', $this->_strSource, $arrMatches, PREG_PATTERN_ORDER);
+	    if (count($arrMatches[0]) > 0)
+	    {
+			for ($i = 0; $i < count($arrMatches[0]); $i++) {
+				# Matched text = $arrMatches[0][$i];
+				//print_r($arrMatches) . "\n";
+				
+			}
+		        
+			return $arrMatches["cr1"][0] . "/" . $arrMatches["cr2"][0];  
+	    }
+	    
+	    return $this->strNotFound; 
+    }    
+   
+    public function getAllReviewsData($count) {
+    	$arrMatches = "";
+    	
+    	preg_match_all('%<p>|(?P<content>.+?)</p>%s', $this->_strReview, $arrMatches, PREG_PATTERN_ORDER);
+    	
+    	$cnt = count($arrMatches[0]);
+    	print "found Review Info=" . $cnt . "\n";
+    	for ($i = 0; $i < $cnt; $i++) {
+    		# Matched text = $arrMatches[0][$i];
+    		//print_r($arrMatches[0][$i]) . "\n";
+    		print $arrMatches[0][$i] . "\n\n";
+    		
+    	}
+    	 
+    }
  }
  
  function print_file($file, $msg)
@@ -216,10 +250,10 @@
  	$fos = null;
  	
     //testStream();
-    $content=  file_get_contents("cache/" . "8b3b1cbb1b6cb55234c96b79cfb89fda.html");
+    $content=  file_get_contents("cache/" . "3294219911e82805762d315860245521.html");
     $releaseinfo = file_get_contents("cache/" . 
-    		//"1660aa3f839e972ae5a79827eae37a38.html");        
-    		"bc_release_info.html");
+    		"1660aa3f839e972ae5a79827eae37a38.html");        
+    		//"bc_release_info.html");
     $review = file_get_contents("cache/" . "222a8a41b4d18b1b3111da1c0be057d9.html");
     
     $oIMDB = new IMDB($content);
@@ -228,14 +262,18 @@
         
     print_file($fos,"<ol>");
     
+    print_file($fos, "getAllReviewsData=" . $oIMDB->getAllReviewsData(3) . "\n\n\n");
+    
+    print_file($fos, "getMetaScore=" . $oIMDB->getMetaScore());
     /*
     //print_file($fos,'<li><p>getRating: <b>' . $oIMDB->getRating() . '</b></p></li>');
     print_file($fos, "getRating=" . $oIMDB->getRating());
     print_file($fos, "getRatingCount=" . $oIMDB->getRatingCount());
     print_file($fos, "getReviewsCount=" . $oIMDB->getReviewsCount());
+    */
     print_file($fos, "getCriticCount=" . $oIMDB->getCriticCount());
     print_file($fos, "getCriticReviewCount=" . $oIMDB->getCriticReviewCount());
-    */
+   
     
     print_file($fos, "getReleasInfo=" . $oIMDB->getReleasInfo('USA'));
     

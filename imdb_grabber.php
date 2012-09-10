@@ -74,11 +74,14 @@ foreach ($convert as $movie)
         print_file($fos,'<li><p>Plot (shortened to 150 chars): <b>' . $oIMDB->getPlot(150) . '</b></p></li>');
         print_file($fos,'<li><p>Poster: <b>' . $oIMDB->getPoster() . '</b></p></li>');
         print_file($fos,'<li><p>Rating: <b>' . $oIMDB->getRating() . '</b></p></li>');
-        print_file($fos,'<li><p>Release Date: <b>' . $oIMDB->getReleasInfoByNation('USA') . '</b></p></li>');
+        //print_file($fos,'<li><p>Release Date: <b>' . $oIMDB->getReleasInfoByNation('USA') . '</b></p></li>');
+        print_file($fos,'<li><p>Release Date: <b>' . $oIMDB->getReleaseDate() . '</b></p></li>');
         
         print_file($fos,'<li><p>Reviews: ' . '</p></li>');
-        print_file($fos,'<ul><li><p>Reviews Count: <b>' . $oIMDB->getReviewCount() . '</b></p></li>');
-        print_file($fos,'</ul>'); // Endof Reviews
+        print_file($fos,	'<ul><li><p>Reviews Count: <b>' . $oIMDB->getReviewCount() . '</b></p></li>');
+        print_file($fos,	'<li><p>Critic Count: <b>' . $oIMDB->getCriticCount() . '</b></p></li>');
+        print_file($fos,	'<li><p>Critic Reviews Count: <b>' . $oIMDB->getCriticReviewCount() . '</b></p></li>');
+        print_file($fos,	'</ul>'); // Endof Reviews
         
         print_file($fos,'<li><p>Runtime: <b>' . $oIMDB->getRuntime() . '</b></p></li>');
         print_file($fos,'<li><p>Seasons: <b>' . $oIMDB->getSeasons() . '</b></p></li>');

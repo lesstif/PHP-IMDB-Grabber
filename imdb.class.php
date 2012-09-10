@@ -49,6 +49,10 @@ class IMDB {
     const IMDB_COMPANY_NAME = '~href="/company/co(\d+)/"\s+>(.*)</a>~Ui';
     const IMDB_COUNTRY      = '~href="/country/(\w+)"(?:>|    >)(.*)</a>~Ui';
     const IMDB_CREATOR      = '~<h4 class="inline">\s+(Creator|Creators):\s+</h4>(.*)</div><div~Ui';
+    
+    const IMDB_CRITIC_COUNT = '~<span itemprop="reviewCount">([0-9]+)</span>\s*critic~Ui';    
+    const IMDB_CRITIC_REVIEWS_COUNT = '~href="criticreviews"\s+title="([0-9]+)\s+review excerpts provided by Metacritic\.com"~Ui';
+    
     const IMDB_DESCRIPTION  = '~<p itemprop="description">(.*)(?:<a |</p>)~Ui';
     const IMDB_DIRECTOR     = '~<h4 class="inline">\s+(?:Director|Directors):\s+</h4>(.*)</div>~Ui';
     const IMDB_GENRE        = '~href="/genre/(.*)"~Ui';
@@ -251,8 +255,8 @@ proc:
     		
    		if ($sub == "releaseinfo")
    		{
-   			$this->_strReleaseinfo = $strOutput;
-   			$content = &$this->_strReleaseinfo;
+   			$this->_strReleaseInfo = $strOutput;
+   			$content = &$this->_strReleaseInfo;
    		}
    		else if ($sub == "reviews")
    		{
@@ -274,7 +278,7 @@ proc:
   			return false;
    		}     	 		
     
-   		// Set the global source.
+   		// Set the global source.   		
    		$content = preg_replace('~(\r|\n|\r\n)~', '', $content);
     
    		// Save cache.
@@ -739,6 +743,24 @@ proc:
         return $this->strNotFound;
     }
 
+    public function getCriticCount() {
+    
+    	if ($strReturn = $this->matchRegex($this->_strSource, IMDB::IMDB_CRITIC_COUNT, 1)) {
+    		return trim($strReturn);
+    	}
+    
+    	return $this->strNotFound;
+    }
+    
+    public function getCriticReviewCount() {
+    
+    	if ($strReturn = $this->matchRegex($this->_strSource, IMDB::IMDB_CRITIC_REVIEWS_COUNT, 1)) {
+    		return trim($strReturn);
+    	}
+    
+    	return $this->strNotFound;
+    }
+    
     /**
      * Returns the description.
      *
@@ -992,8 +1014,16 @@ proc:
     	 
     	$arrMatches = null;
     	 
+    	//preg_match_all('~<tr><td><b><a href="/calendar/\?region=(.+?)</tr>~Ui', $this->_strReleaseInfo, $arrMatches, PREG_PATTERN_ORDER);
     	preg_match_all('~<tr><td><b><a href="/calendar/\?region=(.+?)</tr>~Ui', $this->_strReleaseInfo, $arrMatches, PREG_PATTERN_ORDER);
-
+    				   
+    	/*
+    	preg_match_all('%/date/(?P<dt>(?:1[0-2]|0[1-9])-(?:3[01]|[12][0-9]|0[1-9]))/"|/year/(?P<year>[0-9]+)/"%', $this->_strReleaseInfo, $arrMatches, PREG_PATTERN_ORDER);
+    	for ($i = 0; $i < count($arrMatches[0]); $i++) {
+    		# Matched text = $arrMatches[0][$i];
+    	}   
+    	*/ 	
+    	
     	print "Match ReleaseInfo=" . count($arrMatches[0]) . "\n";
     	
     	for ($i = 0; $i < count($arrMatches[0]); $i++) {
@@ -1023,7 +1053,7 @@ proc:
     		else
     			$loc = "";
     
-    		if ($nation == $cname) {
+    		if ($nation == $nationName) {
     			$strReaseInfo .= "$nation, " . $dt["year"][1] . "-" . $dt["dt"][0] . ",$loc\n";
     		}
     	}
