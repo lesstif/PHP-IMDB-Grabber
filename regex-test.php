@@ -225,19 +225,68 @@
    
     public function getAllReviewsData($count) {
     	$arrMatches = "";
-    	
-    	preg_match_all('%<p>|(?P<content>.+?)</p>%s', $this->_strReview, $arrMatches, PREG_PATTERN_ORDER);
-    	
-    	$cnt = count($arrMatches[0]);
-    	print "found Review Info=" . $cnt . "\n";
-    	for ($i = 0; $i < $cnt; $i++) {
-    		# Matched text = $arrMatches[0][$i];
-    		//print_r($arrMatches[0][$i]) . "\n";
-    		print $arrMatches[0][$i] . "\n\n";
+    	      	 
+    	$fh  = fopen("Oops.log", "wb");
     		
-    	}
+    	/*
+	    preg_match_all('/<hr .+?|(?P<seq2>>(?-i:<p>)(?P<cont>.+?)<div class="yn")/i',  $this->_strReview, $arrMatches, PREG_PATTERN_ORDER);
+	    
+	    $cnt = count($arrMatches);
+	    print "found Review Info=" . $cnt . "\n";
+	    
+		for ($i = 0; $i < count($arrMatches[0]); $i++) {
+			# Matched text = $arrMatches[0][$i];
+			$subject = $arrMatches[0][$i];
+			
+			//print $i . " th " . $subject . "\n\n";
+			//if ( preg_match('/^<p>/i', $subject) ) 
+			{
+				print $i . " th " . $subject . "\n\n";
+			}
+			//print_r ($subject) . "\n";
+		}
+		*/
+		preg_match_all('/<hr .+?|>(?-i:<p>)(?P<cont>.+?)<div class="yn"/i', $this->_strReview, $arrMatches, PREG_PATTERN_ORDER);
+		$arrMatches = $arrMatches[1];
+    	
+		for ($i = 0; $i < count($arrMatches); $i++) {
+			$subject = $arrMatches[$i];
+			$regs = "";
+			
+			//print "SUBJECT=Len=" . strlen($subject) . " Value=" . $subject ."\n\n";
+			
+			if (strlen($subject) < 100)
+				continue;
+			
+			if (preg_match('/^<small>/i', $subject) )
+			{
+				print "Match!! " . $subject . "\n\n";
+			}
+			else {
+				print "Not Match!! " . $subject . "\n\n";
+				continue;
+			}
+			
+			$result = "";
+			//<small>408 out of 593 people found the following review useful:</small><br><b>Not fun, not even in a cheesy sense</b>, <small>7 March 2008</small><br><img width="102" height="12" alt="1/10" src="http://i.media-imdb.com/images/showtimes/10.gif"><br><small>Author:</small><a href="/user/ur5400353/comments">keiichi73</a> <small>from United States</small><br><p><b>*** This review may contain spoilers ***</b></p></p><p>Some critics have moaned that as film technology grows, thestorytelling ability of the movies shrinks. I have never quite agreedwith this assessment, as I believe there is a place for spectacle ofany variety, even the mindless kind. However, to those who share theview of those critics, 10,000 B.C. will most likely be the mostconvincing piece of evidence to their argument. Here is a movie thatlooks like it cost millions to make, but is saddled with a screenplaythat looks like it came from the Dollar Store.<br><br>Director and co-writer, Roland Emmerich is no stranger to brainlessspectacles. This is the guy who brought us Independence Day and 1998&#39;sHollywood take on Godzilla, after all. There&#39;s a very fine line betweenbrainless and just plain brain dead, unfortunately. 10,000 B.C. isshort on spectacle, short on plot, and short on just about anythingthat people go to the movies for. There are characters and a love storyto drive the bare bones plot, but this seems to be added in as anafterthought. I got the impression that Emmerich and fellowscreenwriter, Harald Kloser (a film score composer making his firstscreenplay credit), had the idea for a couple cool scenes, then triedto add a bunch of filler material between them. They threw in somesketchy characters that hardly reach two dimensions to inhabit thisfiller, and called it a screenplay. In order for spectacle to work,even the cheese-filled variety such as this, there has to be somethingfor the audience to get excited about. This movie is just one bigtease.<br><br>The plot, if it can even be called that, is set in the days of earlyman. The heroes are an unnamed tribal people who speak perfect English,all have the bodies of supermodels, and hunt mammoths for food. The twocharacters we&#39;re supposed to be focused on are a pair of young loversnamed D&#39;Leh (Steven Strait) and Evolet (Camilla Belle). Why they are inlove, and why we should care about them, the movie never goes out ofits way to explain. The rest of the villagers do not really matter.They exist simply to be captured when a group of foreign invaders comeriding into their peaceful tribe, and kidnap most of them to work asslaves back in their own home colony. Evolet is one of the captured, soD&#39;Leh and a small handful of others set out to find where they&#39;ve beentaken to, and to seek the aid of other tribes that have also beeninvaded by this enemy. There&#39;s a mammoth herd here, a saber tooth tigerthere, but they have nothing to do with anything. They&#39;re just computergenerated special effects who are there simply because the filmmakersfelt the current scene needed a special effect shot. I&#39;d be moreimpressed if the effects didn&#39;t look so out of place with the actorsmost of the time.<br><br>10,000 B.C. probably would have worked better as a silent movie, or asubtitled one, as most of the dialogue that comes out of the mouths ofthese people are as wooden as the spears they carry. The good tribesare the only people in this movie who have mastered the Queen&#39;sEnglish, naturally. The evil invading tribe speak in subtitles, andsometimes have their voices mechanically altered and lowered, so thatthey sound more threatening and demonic. No one in this movie isallowed to have a personality, or act differently from one another.Everybody in each tribe talks, thinks, and behaves exactly the same,with facial hair and differing body types being the main way to tellthem apart. This would make it hard to get involved in the story, butthe movie dodges this tricky issue by not even having a story in thefirst place. Once the film&#39;s main tribe is attacked, the movie turnsinto an endless string of filler material and padding to drag the wholething out to feature length. Aside from a brief encounter with somebird-like prehistoric creatures, there are no moments of action ordanger until D&#39;Leh and his followers reach the land of the invadingarmy. The movie throws a saber tooth tiger encounter to fool us intothinking something&#39;s gonna happen, but the tiger winds up being just asboring as the human characters inhabiting the movie, and is justmillions in special effects budget wasted on something that didn&#39;t needto be there in the first place, other than to move the shaky plotalong.<br><br>There is a key ingredient missing in 10,000 B.C., and that is fun. Thismovie is not fun to watch at all. I kept on waiting for something,anything, to happen. When something eventually did happen, it wasusually underwhelming. I know of people who are interested in seeingthis movie, because of the special effects, or because they think itlooks enjoyably cheesy. To those people, I say please do not be drawnin by curiosity. This isn&#39;t even enjoyable in a bad sense. Yourprecious time is worth more than what any theater may be charging tosee this movie. For anyone wondering, yes, that includes the budgetcinema and the price of a rental.</p>
+			if (preg_match('%<small>(?P<a>[0-9]+) out of (?P<b>[0-9]+) people found the following review useful:</small>|<b>(?P<title>.+?)</b>|<small>(?P<date>(?i:(?:3[01]|[12][0-9]|[1-9])[ \t]+(?:January|February|March|April|May|June|July|August|September|October|November|December)[ \t]+[0-9]{4}))</small>|<img .+?(?P<rate>1/10|10/10|2/10|3/10|4/10|5/10|6/10|7/10|8/10|9/10)[^\n\r>]+?>|<a [^\n\r>]+?>(?P<id>[\dA-Za-z]{9})</a>|<small>from (?P<loc>.+?)</small>|</p><p>(?P<review>.+?)</p>%', $subject, $regs)) {
+				//$date = defined($regs['date']) ? $regs['date'] : "";
+				print_r($regs) . "\n";
+				
+				//$result = $regs['a'] . "/" . $regs['b'] . " title = " . $date;
+			} else {
+				$result = "";
+			}			
+			
+			print $result . "\n";
+		}
+
+		//fprintf($fh, "%s\n\n", $dump);
+    	    	
+		fclose($fh);
     	 
     }
+
  }
  
  function print_file($file, $msg)
@@ -247,6 +296,7 @@
  	
  	echo $msg . "\n";
  }
+ 	
  	$fos = null;
  	
     //testStream();
