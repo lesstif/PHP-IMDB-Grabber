@@ -12,7 +12,7 @@ class Reviewer {
 	var $url = null;
 	var $nation = null;
 	var $remark = null;
-		
+	var $review = null;	
 }
 
  class IMDB {
@@ -391,13 +391,21 @@ class Reviewer {
     			# Match attempt failed
     		}    		
     		
+    		// 8. review : remark 가 있는 경우가 있으니 확인
+    		preg_match_all('%<p>(?P<review>.+?)</p>%i', $subject, $subMatches, PREG_PATTERN_ORDER);
+    		$rc =count($subMatches['review']); 
+    		if ($rc == 1)
+    			$reviews->review = $subMatches['review'][0]; 
+    		else if ($rc == 2)
+    			$reviews->review = $subMatches['review'][1];
+    		    		
     		array_push($this->arrReviewer, $reviews) ;	
     	}
     
     	for ($i = 0; $i < count($this->arrReviewer); $i++) {
     		$reviews = $this->arrReviewer[$i];
     		
-    		var_dump($reviews);
+    		//var_dump($reviews);
     		//var_dump($reviews->useful);
     		//print $reviews->useful[0] . "\n";
     	}
@@ -431,6 +439,8 @@ class Reviewer {
     $oIMDB->setReview($review);
         
     print_file($fos,"<ol>");
+    
+    print_file($fos, null);
     
     print_file($fos, "getAllReviewsData=" . $oIMDB->getAllReviewsData(3) . "\n\n\n");
     

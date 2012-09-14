@@ -31,11 +31,11 @@ $fos = null;
 
 function print_file($file, $msg)
 {
-	fprintf ($file, $msg);
+	fprintf ($file, "%s", $msg);
 	echo $msg;	
 }
 
-$data = file_get_contents('input.txt', true);
+$data = file_get_contents('all_input.txt', true);
 $convert = explode("\n", $data); //create array separate by new line
 
 foreach ($convert as $movie)
@@ -44,7 +44,13 @@ foreach ($convert as $movie)
 	if ($movie == "")
 		continue;
 	
-	$fos = fopen($movie . ".html", 'wb');
+	// 3:10 TO YUMA (2007)
+	$fn = $movie;
+	$fn = str_replace(':', '-', $fn);
+	$fn = str_replace('?', ' ', $fn);
+	$fos = fopen("output/" . $fn . ".html", 'wb');
+	
+	print "\n$movie Processing...Output = $fn\n\n";
 	
 	$oIMDB = new IMDB($movie);
 	if ($oIMDB->isReady) {
@@ -81,12 +87,45 @@ foreach ($convert as $movie)
         print_file($fos,	'<ul><li><p>Reviews Count: <b>' . $oIMDB->getReviewCount() . '</b></p></li>');
         print_file($fos,	'<li><p>Critic Count: <b>' . $oIMDB->getCriticCount() . '</b></p></li>');
         print_file($fos,	'<li><p>Critic Reviews Count: <b>' . $oIMDB->getCriticReviewCount() . '</b></p></li>');
+        // Reviewers
+        $arRvs = $oIMDB->getAllReviewsData();
+                
+        for ($i = 0; $i < count($arRvs); $i++) {
+        	// print only 3 reviews
+        	if ($i == 3)
+        		break;
+
+        	$rv = $arRvs[$i];
+        	/*
+        	 *  var $useful = 0;
+				var $outof = 0;
+				var $title = "";
+				var $rev_date = null;
+				var $rate = null;
+				var $author = null;
+				var $url = null;
+				var $nation = null;
+				var $remark = null;
+        	 */
+        	print_file($fos,	sprintf('<li><p>Reviews(%d): </p></li><ul>', $i + 1));
+        	print_file($fos,	sprintf('<li><p>%d out of %d people found the following review useful:  </p></li>', $rv->useful, $rv->outof));
+        	print_file($fos,	'<li><p>title  <b>' . $rv->title . '</b></p></li>');
+        	print_file($fos,	'<li><p>date  <b>' . $rv->rev_date . '</b></p></li>');
+        	print_file($fos,	'<li><p>rate  <b>' . $rv->rate . '</b></p></li>');
+        	print_file($fos,	'<li><p>author  <b><a href="' . $rv->url . "\">" . $rv->author . '</a></b></p></li>');
+        	print_file($fos,	'<li><p>nation  <b>' . $rv->nation . '</b></p></li>');
+        	print_file($fos,	'<li><p>remark  <b>' . $rv->remark . '</b></p></li>');
+        	print_file($fos,	'<li><p>review  <b>' . $rv->review . '</b></p></li>');
+        	print_file($fos, "</ul>");
+        }
+        
         print_file($fos,	'</ul>'); // Endof Reviews
         
         print_file($fos,'<li><p>Runtime: <b>' . $oIMDB->getRuntime() . '</b></p></li>');
         print_file($fos,'<li><p>Seasons: <b>' . $oIMDB->getSeasons() . '</b></p></li>');
         print_file($fos,'<li><p>Tagline: <b>' . $oIMDB->getTagline() . '</b></p></li>');
         print_file($fos,'<li><p>Title: <b>' . $oIMDB->getTitle() . '</b></p></li>');
+        /**
         print_file($fos,'<li><p>Trailer: <br>');
         if ($oIMDB->getTrailerAsUrl() != 'n/A') {
             print_file($fos,'<iframe width="660" height="500" scrolling="no" border="0" src="' . $oIMDB->getTrailerAsUrl() . '"></iframe>');
@@ -94,6 +133,8 @@ foreach ($convert as $movie)
         else {
             print_file($fos,'No trailer found.');
         }
+        */
+        
         print_file($fos,'</p></li>');
         print_file($fos,'<p><li>Url: <b><a href="' . $oIMDB->getUrl() . '">' . $oIMDB->getUrl() . '</a></b></p></li>');
         print_file($fos,'<p><li>Votes: <b>' . $oIMDB->getVotes() . '</b></p></li>');
@@ -108,6 +149,8 @@ foreach ($convert as $movie)
 	}
 	
 	fclose($fos);
+	
+	sleep(2);
 }
 ?>
 
